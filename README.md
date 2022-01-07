@@ -1,5 +1,5 @@
 # AV-HuBERT (Audio-Visual Hidden Unit BERT)
-[Learning Audio-Visual Speech Representation by Masked Multimodal Cluster Prediction](https://dl.fbaipublicfiles.com/avhubert/paper/avhubert.pdf)
+[Learning Audio-Visual Speech Representation by Masked Multimodal Cluster Prediction](https://arxiv.org/abs/2201.02184)
 
 [Robust Self-Supervised Audio-Visual Speech Recognition](https://arxiv.org/abs/2201.01763)
 
@@ -10,9 +10,10 @@ AV-HuBERT is a self-supervised representation learning framework for audio-visua
 
 If you find AV-HuBERT useful in your research, please use the following BibTeX entry for citation.
 ```BibTeX
-@inproceedings{shi2022avhubert,
+@article{shi2022avhubert,
     author  = {Bowen Shi and Wei-Ning Hsu and Kushal Lakhotia and Abdelrahman Mohamed},
     title = {Learning Audio-Visual Speech Representation by Masked Multimodal Cluster Prediction},
+    journal = {arXiv preprint arXiv:2201.02184}
     year = {2022}
 }
 
