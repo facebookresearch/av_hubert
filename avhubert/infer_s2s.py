@@ -52,7 +52,8 @@ class OverrideConfig(FairseqDataclass):
     noise_prob: float = field(default=0, metadata={'help': 'noise probability'})
     noise_snr: float = field(default=0, metadata={'help': 'noise SNR in audio'})
     modalities: List[str] = field(default_factory=lambda: [""], metadata={'help': 'which modality to use'})
-
+    data: Optional[str] = field(default=None, metadata={'help': 'path to test data directory'})
+    label_dir: Optional[str] = field(default=None, metadata={'help': 'path to test label directory'})
 
 @dataclass
 class InferConfig(FairseqDataclass):
@@ -132,6 +133,10 @@ def _main(cfg, output_file):
     task.cfg.noise_prob = cfg.override.noise_prob
     task.cfg.noise_snr = cfg.override.noise_snr
     task.cfg.noise_wav = cfg.override.noise_wav
+    if cfg.override.data is not None:
+        task.cfg.data = cfg.override.data
+    if cfg.override.label_dir is not None:
+        task.cfg.label_dir = cfg.override.label_dir
     task.load_dataset(cfg.dataset.gen_subset, task_cfg=saved_cfg.task)
 
     lms = [None]

@@ -145,8 +145,17 @@ Important parameters include:
 - generation.beam
 - generation.lenpen
 
+#### Different test set
+If your test data are stored in a different directory with the training data, append the following to the above command.
+
+`+override.data=/path/to/test +override.label_dir=/path/to/test`
+
+, where `/path/to/test` contains `test.{tsv,wrd}`. This is useful when you want to test with the fine-tuned checkpoints we provide.
+
+#### Test under noisy environment
 If you want to test your model under noisy environment, append the following to the above command.
 
 `+override.noise_wav=/path/to/noise override.noise_prob=1 override.noise_snr={snr}` 
 
  `{snr}` is the signal-to-noise ratio (SNR) and `/path/to/noise` is a folder containing noise manifest files (`/path/to/noise/{valid,test}.tsv`). See [`preparation`](avhubert/preparation/) for setting up this folder.
+
