@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # audio_num_frames, video_num_frames = [x[0] for x in total_num_frames], [x[1] for x in total_num_frames]
     tmp_dir = tempfile.mkdtemp(dir='./')
     executor = submitit.AutoExecutor(folder=tmp_dir)
-    executor.update_parameters(slurm_array_parallelism=100, slurm_partition=args.slurm_partition)
+    executor.update_parameters(slurm_array_parallelism=100, slurm_partition=args.slurm_partition, timeout_min=240)
     ranks = list(range(0, args.nshard))
     fids_arr = []
     num_per_shard = math.ceil(len(fids)/args.nshard)

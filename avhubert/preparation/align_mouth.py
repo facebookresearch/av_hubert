@@ -127,7 +127,7 @@ def load_args(default_config=None):
     return args
 
 
-def crop_patch(video_pathname, landmarks, mean_face_landmarks, stablePntsIDs, STD_SIZE):
+def crop_patch(video_pathname, landmarks, mean_face_landmarks, stablePntsIDs, STD_SIZE, window_margin, start_idx, stop_idx, crop_height, crop_width):
 
     """Crop mouth patch
     :param str video_pathname: pathname for the video_dieo
@@ -137,7 +137,7 @@ def crop_patch(video_pathname, landmarks, mean_face_landmarks, stablePntsIDs, ST
     frame_idx = 0
     num_frames = get_frame_count(video_pathname)
     frame_gen = read_video(video_pathname)
-    margin = min(num_frames, args.window_margin)
+    margin = min(num_frames, window_margin)
     while True:
         try:
             frame = frame_gen.__next__() ## -- BGR
@@ -161,9 +161,9 @@ def crop_patch(video_pathname, landmarks, mean_face_landmarks, stablePntsIDs, ST
             trans_landmarks = trans(cur_landmarks)
             # -- crop mouth patch
             sequence.append( cut_patch( trans_frame,
-                                        trans_landmarks[args.start_idx:args.stop_idx],
-                                        args.crop_height//2,
-                                        args.crop_width//2,))
+                                        trans_landmarks[start_idx:stop_idx],
+                                        crop_height//2,
+                                        crop_width//2,))
         if frame_idx == len(landmarks)-1:
             while q_frame:
                 cur_frame = q_frame.popleft()
@@ -173,9 +173,9 @@ def crop_patch(video_pathname, landmarks, mean_face_landmarks, stablePntsIDs, ST
                 trans_landmarks = trans(q_landmarks.popleft())
                 # -- crop mouth patch
                 sequence.append( cut_patch( trans_frame,
-                                            trans_landmarks[args.start_idx:args.stop_idx],
-                                            args.crop_height//2,
-                                            args.crop_width//2,))
+                                            trans_landmarks[start_idx:stop_idx],
+                                            crop_height//2,
+                                            crop_width//2,))
             return np.array(sequence)
         frame_idx += 1
     return None
@@ -244,7 +244,7 @@ if __name__ == '__main__':
             continue
 
         # -- crop
-        sequence = crop_patch(video_pathname, preprocessed_landmarks, mean_face_landmarks, stablePntsIDs, STD_SIZE)
+        sequence = crop_patch(video_pathname, preprocessed_landmarks, mean_face_landmarks, stablePntsIDs, STD_SIZE, window_margin=args.window_margin, start_idx=args.start_idx, stop_idx=args.stop_idx, crop_height=args.crop_height, crop_width=args.crop_width)
         assert sequence is not None, "cannot crop from {}.".format(filename)
 
         # -- save
