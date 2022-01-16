@@ -14,7 +14,7 @@ Download and decompress the [data](https://www.robots.ox.ac.uk/~vgg/data/lip_rea
 
 ### 1. Data preparation
 ```sh
-python lrs3_prepare.py --root ${lrs3} --ffmpeg /path/to/ffmpeg --rank ${rank} --nshard ${nshard} --step ${step}
+python lrs3_prepare.py --lrs3 ${lrs3} --ffmpeg /path/to/ffmpeg --rank ${rank} --nshard ${nshard} --step ${step}
 ```
 This will generate a list of file-ids (`${lrs3}/file.list`) and corresponding text labels (`${lrs3}/label.list`). Specifically, it includes 4 steps, where `${step}` ranges from `1,2,3,4`. Step 1, split long utterances in LRS3 `pretraining` into shorter utterances, generate their time boundaries and labels. Step 2, trim videos and audios according to the new time boundary. Step 3, extracting audio for trainval and test split. Step 4, generate a list of file ids and corresponding text transcriptions.  `${nshard}` and `${rank}` are only used in step 2 and 3. This would shard all videos into `${nshard}` and processes `${rank}`-th shard, where rank is an integer in `[0,nshard-1]`. 
 
@@ -35,10 +35,21 @@ This generates mouth ROIs in `${lrs3}/video`. It shards all videos in `${lrs3}/f
 
 ### 3. Count number of frames per clip
 ```sh
-python count_frames.py --root ${lrs3} --manifest ${lrs3}/file.list --nshard ${nshard} \
---slurm_partition ${slurm_partition}
+python count_frames.py --root ${lrs3} --manifest ${lrs3}/file.list --nshard ${nshard} --rank ${rank}
 ```
-This counts number of audio/video frames per clip and saves them in `${lrs3}/nframes.audio` and `${lrs3}/nframes.video` respectively. The whole data will be sharded into `${nshard}` parts and each job processes one part. It runs on Slurm and has dependency on [submitit](https://github.com/facebookincubator/submitit).
+This counts number of audio/video frames for `${rank}`-th shard and saves them in `${lrs3}/nframes.audio.${rank}` and `${lrs3}/nframes.video.${rank}` respectively. Merge shards by running:
+
+```
+for rank in $(seq 0 $((nshard - 1)));do cat ${lrs3}/nframes.audio.${rank}; done > ${lrs3}/nframes.audio
+for rank in $(seq 0 $((nshard - 1)));do cat ${lrs3}/nframes.video.${rank}; done > ${lrs3}/nframes.video
+```
+
+If you are on slurm, the above commands (counting per shard + merging) can be combined by:
+```sh
+python count_frames_slurm.py --root ${lrs3} --manifest ${lrs3}/file.list --nshard ${nshard} \
+ --slurm_partition ${slurm_partition}
+```
+It has dependency on [submitit](https://github.com/facebookincubator/submitit) and will directly  generate `${lrs3}/nframes.audio` and `${lrs3}/nframes.video`.
 
 ### 4. Set up data directory
 ```sh
@@ -75,10 +86,21 @@ This generates mouth ROIs in `${vox}/video`, similar to LRS3 data preparation.
 
 ### 3. Count number of frames per clip
 ```sh
-python count_frames.py --root ${vox} --manifest ${vox}/file.list --nshard ${nshard} \
---slurm_partition ${slurm_partition}
+python count_frames.py --root ${vox} --manifest ${vox}/file.list --nshard ${nshard} --rank ${rank}
 ```
-This counts number of audio/video frames per clip and saves them in `${vox}/nframes.audio` and `${vox}/nframes.video` respectively, similar to LRS3 data preparation. 
+This counts number of audio/video frames for `${rank}`-th shard and saves them in `${vox}/nframes.audio.${rank}` and `${vox}/nframes.video.${rank}` respectively, similar to LRS3 data preparation. Merge shards by running:
+
+```
+for rank in $(seq 0 $((nshard - 1)));do cat ${vox}/nframes.audio.${rank}; done > ${vox}/nframes.audio
+for rank in $(seq 0 $((nshard - 1)));do cat ${vox}/nframes.video.${rank}; done > ${vox}/nframes.video
+```
+
+If you are on slurm, the above commands (counting per shard + merging) can be combined by:
+```sh
+python count_frames_slurm.py --root ${vox} --manifest ${vox}/file.list --nshard ${nshard} \
+ --slurm_partition ${slurm_partition}
+```
+It has dependency on [submitit](https://github.com/facebookincubator/submitit) and will directly  generate `${vox}/nframes.audio` and `${vox}/nframes.video`, similar to LRS3 data preparation.
 
 ### 4. Set up data directory
 ```sh

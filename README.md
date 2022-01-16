@@ -46,6 +46,9 @@ immediately cease using the Software Products.
 
 Please find the checkpoints [here](http://facebookresearch.github.io/av_hubert)
 
+## Demo
+Run our lip-reading demo using Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1bNXkfpHiVHzXQH8WjGhzQ-fsDxolpUjD)
+
 ## Installation
 First, create a conda virtual environment and activate it:
 ```
