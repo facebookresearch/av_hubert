@@ -16,7 +16,6 @@ import subprocess
 import argparse
 import numpy as np
 from collections import deque
-import cv2
 from skimage import transform as tf
 from tqdm import tqdm
 
