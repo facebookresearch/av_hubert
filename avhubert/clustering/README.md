@@ -74,6 +74,13 @@ for rank in $(seq 0 $((nshard - 1))); do
   cat $lab_dir/${split}_${rank}_${nshard}.km
 done > $lab_dir/${split}.km
 ```
+and create a dictionary of cluster indexes by running
+```sh
+for i in $(seq 1 $((n_cluster-1)));do 
+    echo $i 10000
+done > $lab_dir/dict.{mfcc,km}.txt
+```
+
 
 ## Clustering on slurm
 If you are on slurm, you can combine the above steps (feature extraction + K-means clustering + K-means application) by:
