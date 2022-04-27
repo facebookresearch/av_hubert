@@ -53,11 +53,10 @@ It has dependency on [submitit](https://github.com/facebookincubator/submitit) a
 
 ### 4. Set up data directory
 ```sh
-python lrs3_manifest.py --lrs3 ${lrs3} --manifest ${lrs3}/file.list \
- --valid-ids /path/to/valid --vocab-size ${vocab_size}
+python lrs3_manifest.py --lrs3 ${lrs3} --valid-ids /path/to/valid --vocab-size ${vocab_size}
 ```
 
-This sets up data directory of trainval-only (~30h training data) and pretrain+trainval (~433h training data). It will first make a tokenizer based on sentencepiece model and set up target directory containing `${train|valid|test}.{tsv|wrd}`. `*.tsv` are manifest files and `*.wrd` are text labels.  `/path/to/valid` contains held-out clip ids used as validation set. The one used in our experiments can be found [here](data/lrs3-valid.id). 
+This sets up data directory of trainval-only (~30h training data) and pretrain+trainval (~433h training data). It will first make a tokenizer based on sentencepiece model and set up target directory containing `${train|valid|test}.{tsv|wrd}`. `*.tsv` are manifest files and `*.wrd` are text labels.  `/path/to/valid` contains held-out clip ids used as validation set. The one used in our experiments can be found [here](data/lrs3-valid.id). The `${vocab_size}` is optional and is set to 1000 by default.
 
 
 ## VoxCeleb2 Preprocessing
