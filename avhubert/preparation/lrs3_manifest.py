@@ -18,7 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description='LRS3 tsv preparation', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--lrs3', type=str, help='lrs3 root dir')
     parser.add_argument('--valid-ids', type=str, help='a list of valid ids')
-    parser.add_argument('--vocab-size', type=int, default=1000, help='a list of valid ids')
+    parser.add_argument('--vocab-size', type=int, default=1000, help='length of vocab size to be generated (optional)')
     args = parser.parse_args()
     file_list, label_list = f"{args.lrs3}/file.list", f"{args.lrs3}/label.list"
     assert os.path.isfile(file_list) , f"{file_list} not exist -> run lrs3_prepare.py first"
