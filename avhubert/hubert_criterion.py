@@ -109,7 +109,7 @@ class AVHubertCriterion(FairseqCriterion):
             for i, logp_m in enumerate(logp_m_list):
                 # corr_m, count_m = compute_correct(logp_m)
                 if logp_m.numel() == 0:
-                    corr_m, count_m = 0
+                    corr_m, count_m = 0, 0
                 else:
                     corr_m, count_m = (logp_m.argmax(dim=-1)==targ_m_list[i]).sum().item(), len(targ_m_list[i])
                 logging_output[f"correct_m_{i}"] = corr_m
