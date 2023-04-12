@@ -64,6 +64,9 @@ class AVHubertPretrainingConfig(FairseqDataclass):
     data: str = field(
         default=MISSING, metadata={"help": "path to data directory"}
     )
+    input_modality: str = field(
+        default=MISSING, metadata={"help": "placeholder (for compatibility)"}
+    )
     labels: List[str] = field(
         default_factory=lambda: ["ltr"],
         metadata={
