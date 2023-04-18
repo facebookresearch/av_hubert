@@ -238,10 +238,10 @@ class AVHubertDataset(FairseqDataset):
         if self.store_labels:
             label = self.label_list[label_idx][index]
         else:
-            with open(self.label_paths[label_idx]) as f:
+            with open(self.label_paths[label_idx], 'rb') as f:
                 offset_s, offset_e = self.label_offsets_list[label_idx][index]
                 f.seek(offset_s)
-                label = f.read(offset_e - offset_s)
+                label = f.read(offset_e - offset_s).decode("utf-8").strip()
 
         if self.label_processors is not None:
             label = self.label_processors[label_idx](label)
