@@ -14,6 +14,7 @@ import json
 import hashlib
 import editdistance
 from argparse import Namespace
+from omegaconf import DictConfig
 
 import numpy as np
 import torch
@@ -22,7 +23,7 @@ from fairseq.dataclass.utils import convert_namespace_to_omegaconf
 from fairseq.logging import progress_bar
 from fairseq.logging.meters import StopwatchMeter, TimeMeter
 from fairseq.models import FairseqLanguageModel
-from omegaconf import DictConfig
+from fairseq.scoring.wer import WerScorer, WerScorerConfig
 
 from pathlib import Path
 import hydra
@@ -39,6 +40,8 @@ from fairseq.dataclass.configs import (
 from dataclasses import dataclass, field, is_dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 from omegaconf import OmegaConf
+import sacrebleu
+
 
 logging.root.setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO)
@@ -54,6 +57,9 @@ class OverrideConfig(FairseqDataclass):
     modalities: List[str] = field(default_factory=lambda: [""], metadata={'help': 'which modality to use'})
     data: Optional[str] = field(default=None, metadata={'help': 'path to test data directory'})
     label_dir: Optional[str] = field(default=None, metadata={'help': 'path to test label directory'})
+    labels: Optional[List[str]] = field(default=None, metadata={"help": "list of labels"})
+    eval_bleu: bool = field(default=False, metadata={'help': 'evaluate bleu score'})
+    tokenizer_bpe_model: Optional[str] = field(default=None, metadata={'help': 'path to tokenizer'})
 
 @dataclass
 class InferConfig(FairseqDataclass):
@@ -111,11 +117,12 @@ def _main(cfg, output_file):
     utils.import_user_module(cfg.common)
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([cfg.common_eval.path])
     models = [model.eval().cuda() for model in models]
-    saved_cfg.task.modalities = cfg.override.modalities
-    task = tasks.setup_task(saved_cfg.task)
+    task.cfg.modalities = cfg.override.modalities
+    if cfg.override.tokenizer_bpe_model is not None:
+        task.cfg.tokenizer_bpe_model = cfg.override.tokenizer_bpe_model
 
-    task.build_tokenizer(saved_cfg.tokenizer)
-    task.build_bpe(saved_cfg.bpe)
+    # task.build_tokenizer(saved_cfg.tokenizer)
+    # task.build_bpe(saved_cfg.bpe)
 
     logger.info(cfg)
 
@@ -129,7 +136,7 @@ def _main(cfg, output_file):
     # Set dictionary
     dictionary = task.target_dictionary
 
-    # loading the dataset should happen after the checkpoint has been loaded so we can give it the saved task config
+    # override training configuration
     task.cfg.noise_prob = cfg.override.noise_prob
     task.cfg.noise_snr = cfg.override.noise_snr
     task.cfg.noise_wav = cfg.override.noise_wav
@@ -137,7 +144,13 @@ def _main(cfg, output_file):
         task.cfg.data = cfg.override.data
     if cfg.override.label_dir is not None:
         task.cfg.label_dir = cfg.override.label_dir
-    task.load_dataset(cfg.dataset.gen_subset, task_cfg=saved_cfg.task)
+    if cfg.override.labels is not None:
+        task.cfg.labels = cfg.override.labels
+    # override min/max sample-size
+    task.cfg.min_sample_size = 0
+    task.cfg.max_sample_size=cfg.dataset.max_tokens
+    # loading the dataset
+    task.load_dataset(cfg.dataset.gen_subset, task_cfg=task.cfg)
 
     lms = [None]
 
@@ -248,20 +261,33 @@ def _main(cfg, output_file):
     fid = int(hashlib.md5(yaml_str.encode("utf-8")).hexdigest(), 16)
     fid = fid % 1000000
     result_fn = f"{cfg.common_eval.results_path}/hypo-{fid}.json"
-    json.dump(result_dict, open(result_fn, 'w'), indent=4)
-    n_err, n_total = 0, 0
-    assert len(result_dict['hypo']) == len(result_dict['ref'])
-    for hypo, ref in zip(result_dict['hypo'], result_dict['ref']):
-        hypo, ref = hypo.strip().split(), ref.strip().split()
-        n_err += editdistance.eval(hypo, ref)
-        n_total += len(ref)
-    wer = 100 * n_err / n_total
-    wer_fn = f"{cfg.common_eval.results_path}/wer.{fid}"
-    with open(wer_fn, "w") as fo:
-        fo.write(f"WER: {wer}\n")
-        fo.write(f"err / num_ref_words = {n_err} / {n_total}\n\n")
-        fo.write(f"{yaml_str}")
-    logger.info(f"WER: {wer}%")
+    json.dump(result_dict, open(result_fn, "w", encoding='utf-8'), indent=4, ensure_ascii=False)
+    if not cfg.override.eval_bleu:
+        scorer = WerScorer(
+            WerScorerConfig(
+                wer_tokenizer="13a",
+                wer_remove_punct=True,
+                wer_char_level=False,
+                wer_lowercase=True
+            )
+        )
+        for hypo, ref in zip(result_dict["hypo"], result_dict["ref"]):
+            scorer.add_string(ref=ref, pred=hypo)
+        wer = scorer.score()
+        wer_fn = f"{cfg.common_eval.results_path}/wer.{fid}"
+        with open(wer_fn, "w") as fo:
+            fo.write(f"WER: {wer}\n")
+            fo.write(f"err / num_ref_words = {scorer.distance} / {scorer.ref_length}\n\n")
+            fo.write(f"{yaml_str}")
+        logger.info(f"WER: {wer}%")
+    else:
+        bleu = sacrebleu.corpus_bleu(result_dict['hypo'], [result_dict['ref']])
+        bleu_score = bleu.score
+        bleu_fn = f"{cfg.common_eval.results_path}/bleu.{fid}"
+        with open(bleu_fn, "w") as fo:
+            fo.write(f"BLEU: {bleu_score}\n")
+            fo.write(f"{yaml_str}")
+        logger.info(f"BLEU: {bleu_score}\n")
     return
 
 
