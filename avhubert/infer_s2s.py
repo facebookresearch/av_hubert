@@ -116,7 +116,7 @@ def _main(cfg, output_file):
 
     utils.import_user_module(cfg.common)
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([cfg.common_eval.path])
-    models = [model.eval().cuda() for model in models]
+    # models = [model.eval().cuda() for model in models]
     task.cfg.modalities = cfg.override.modalities
     if cfg.override.tokenizer_bpe_model is not None:
         task.cfg.tokenizer_bpe_model = cfg.override.tokenizer_bpe_model
