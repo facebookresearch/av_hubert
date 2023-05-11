@@ -314,6 +314,21 @@ class AVHubertConfig(FairseqDataclass):
     )
     no_scale_embedding: bool = field(default=True, metadata={'help': 'scale embedding'})
 
+    # configs in new fairseq
+    required_seq_len_multiple: int = field(
+        default=1,
+        metadata={
+            "help": "pad the input to encoder such that the sequence length is divisible by multiple"
+        },
+    )
+    layer_type: ChoiceEnum(["transformer", "conformer"]) = field(
+        default="transformer", metadata={"help": "layer type in encoder"}
+    )
+    checkpoint_activations: bool = field(
+        default=False,
+        metadata={"help": "recompute activations and save memory for extra compute"},
+    )
+
 class SubModel(nn.Module):
     def __init__(self, resnet=None, input_dim=None, cfg=None):
         super().__init__()

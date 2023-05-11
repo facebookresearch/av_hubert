@@ -19,7 +19,7 @@ from fairseq.dataclass.utils import convert_namespace_to_omegaconf
 from fairseq.models import BaseFairseqModel, FairseqEncoder, FairseqEncoderDecoderModel, register_model
 from fairseq.models.hubert.hubert import MASKING_DISTRIBUTION_CHOICES
 from fairseq.tasks import FairseqTask
-from omegaconf import II, MISSING
+from omegaconf import II, MISSING, open_dict
 
 DBG=True if len(sys.argv) == 1 else False
 
@@ -465,10 +465,15 @@ class AVHubertSeq2Seq(FairseqEncoderDecoderModel):
         task_pretrain = tasks.setup_task(w2v_args.task)
         if state is not None:
             task_pretrain.load_state_dict(state['task_state'])
+        else:
+            task_pretrain.load_state_dict(task.state_dict())
 
         encoder_ = task_pretrain.build_model(w2v_args.model)
 
         encoder = HubertEncoderWrapper(encoder_)
+        with open_dict(cfg):
+            cfg.encoder_embed_dim = encoder.w2v_model.encoder_embed_dim
+        
         if state is not None and not cfg.no_pretrained_weights:
             # set strict=False because we omit some modules
             del state['model']['mask_emb']

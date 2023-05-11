@@ -48,7 +48,7 @@ class LabelEncoderS2SToken(object):
         self.dictionary = dictionary
 
     def __call__(self, label: str) -> List[str]:
-        label = self.bpe_tokenizer.encode(label.lower())
+        label = self.bpe_tokenizer.encode(label)
         return self.dictionary.encode_line(
             label, append_eos=True, add_if_not_exist=False,
         ).long()
@@ -63,6 +63,9 @@ class LabelEncoderS2SToken(object):
 class AVHubertPretrainingConfig(FairseqDataclass):
     data: str = field(
         default=MISSING, metadata={"help": "path to data directory"}
+    )
+    input_modality: str = field(
+        default=MISSING, metadata={"help": "placeholder (for compatibility)"}
     )
     labels: List[str] = field(
         default_factory=lambda: ["ltr"],
