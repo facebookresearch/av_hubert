@@ -58,7 +58,7 @@ conda activate avhubert
 Then, clone this directory:
 ```
 git clone https://github.com/facebookresearch/av_hubert.git
-cd avhubert
+cd av_hubert
 git submodule init
 git submodule update
 ```
